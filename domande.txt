@@ -1,0 +1,50 @@
+Il conducente non deve assistere un ferito in strada:False
+Il limite sulle autostrade è 200 km/h:False
+Il conducente deve fermarsi dopo un incidente se ci sono feriti:True
+È consentito usare il cellulare alla guida senza vivavoce:False
+La cintura di sicurezza è obbligatoria anche nei sedili posteriori:True
+Il casco è obbligatorio per chi guida un ciclomotore:True
+Si può superare in prossimità di un dosso:False
+Il semaforo giallo obbliga ad accelerare:False
+La distanza di sicurezza dipende dalla velocità:True
+Il sorpasso a destra è sempre consentito:False
+Guidare in stato di ebbrezza è consentito se si va piano:False
+Il segnale di STOP impone l’arresto del veicolo:True
+È obbligatorio dare precedenza ai pedoni sulle strisce:True
+La patente AM consente di guidare un autobus:False
+La nebbia riduce la visibilità:True
+Gli pneumatici lisci migliorano l’aderenza:False
+La freccia va usata per segnalare un cambio di direzione:True
+Il clacson può essere usato inutilmente in città:False
+La revisione del veicolo è obbligatoria:True
+È possibile parcheggiare davanti a un passo carrabile:False
+Il giubbotto riflettente va indossato in caso di emergenza fuori dal veicolo:True
+Il limite di velocità in centro abitato è normalmente 50 km/h:True
+Un motociclista può circolare senza specchietti:False
+La segnaletica orizzontale comprende le strisce sull’asfalto:True
+Si può passare con il rosso se non arriva nessuno:False
+Il conducente deve regolare la velocità in base alle condizioni della strada:True
+La patente si può usare anche se è scaduta da anni:False
+Il parabrezza sporco può ridurre la sicurezza:True
+È vietato guidare contromano:True
+Le luci anabbaglianti si usano di notte:True
+Le luci abbaglianti si possono usare sempre in città:False
+La precedenza è sempre di chi arriva più veloce:False
+I bambini devono usare sistemi di ritenuta adeguati:True
+La corsia di emergenza si usa per parcheggiare:False
+Il segnale triangolare indica pericolo:True
+In caso di pioggia aumenta lo spazio di frenata:True
+Il casco protegge anche in caso di caduta a bassa velocità:True
+È consentito trasportare persone in numero superiore a quello indicato sul libretto:False
+La targa deve essere sempre leggibile:True
+Chi guida deve sempre avere il controllo del veicolo:True
+I freni usurati non influiscono sulla sicurezza:False
+Il passaggio a livello va attraversato con prudenza:True
+È possibile invertire il senso di marcia in galleria:False
+La segnalazione manuale può sostituire gli indicatori di direzione se non funzionano:True
+Il conducente deve verificare l’efficienza del veicolo prima di partire:True
+La stanchezza può ridurre i tempi di reazione:True
+Si può guidare senza patente se il tragitto è breve:False
+Il segnale di divieto di accesso è rotondo con sfondo rosso:True
+La velocità deve essere moderata vicino alle scuole:True
+Dopo aver assunto droghe si può guidare normalmente:True
