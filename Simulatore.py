@@ -2,6 +2,7 @@ from random import randint
 import tkinter as tk
 from tkinter import messagebox as mess
 from datetime import *
+from math import floor
 
 nomeFile = "domande.txt"
 nomeFileHistory = "history.txt"
@@ -12,6 +13,8 @@ bgIO = "#B3E5FC"
 fgIO = "#0D47A1"
 totalWidth = 1000
 totalHeigth = 700
+tempo = 20*60
+
 class Simulatore(tk.Frame):
     i : int
     risposteGiuste : list
@@ -36,6 +39,9 @@ class Simulatore(tk.Frame):
         self.start.grid(row=1,column=0,columnspan=2,pady=10)
         self.esci = tk.Button(self,text="Esci",command=self.master.destroy,fg="#d1666f",width=10)
         self.esci.grid(row=4,column=0,columnspan=2)
+        self.master.bind("6",self.clear)
+        self.master.bind("Enter",self.start)
+
     
     def creaQuiz(self):
         self.domanda = tk.Label(self,text=self.domande[self.i].get("domanda"))
@@ -50,10 +56,14 @@ class Simulatore(tk.Frame):
         self.sinistra.grid(row=5,column=0)
         self.destra = tk.Button(self,text="->",command=self.vaiDestra)
         self.destra.grid(row=5,column=1)
+        self.tempoL = tk.Label(self,text="20:00")
+        self.tempoL.grid(row=6,column=0,columnspan=2)
         self.master.bind("v",self.veroQuiz)
         self.master.bind("f",self.falsoQuiz)
         self.master.bind("<Left>",self.vaiSinistra)
         self.master.bind("<Right>",self.vaiDestra)
+        self.tempoR = tempo
+        self.after(100,self.timer)
 
     def vaiDestra(self,e):
         if self.i == self.numeroDomande-1:
@@ -80,28 +90,31 @@ class Simulatore(tk.Frame):
     def verifica(self,ris):
         self.risposte.update({self.i:ris})
         self.vaiDestra(None)
-        print(self.risposte)
     
     def stopQuiz(self):
-        for i in range(len(self.risposte)):
-            if self.domande[i].get("risposta") == self.risposte.get(i):
-                self.risposteGiuste.append(self.domande[i])
+        risp = True
+        if len(self.risposte) != 30:
+            risp = mess.askyesno("Fine","Concludere l'esame anche se non si hanno fatto tutte e 30 le domande?")
+        if risp:
+            for i in range(len(self.risposte)):
+                if self.domande[i].get("risposta") == self.risposte.get(i):
+                    self.risposteGiuste.append(self.domande[i])
+                else:
+                    self.risposteSbagliate.append(self.domande[i])
+            
+            if len(self.risposte) > 0:
+                mess.showinfo("Quiz",f"Quiz giusti: {len(self.risposteGiuste)}/{len(self.risposte)}")
+                self.i = 0
+                self.spiegazione()
             else:
-                self.risposteSbagliate.append(self.domande[i])
-        
-        if len(self.risposte) > 0:
-            print(f"Giuste ",self.risposteGiuste)
-            print(f"Sbagliate ",self.risposteSbagliate)
-            mess.showinfo("Quiz",f"Quiz giusti: {len(self.risposteGiuste)}/{len(self.risposte)}")
-            self.i = 0
-            self.spiegazione()
+                mess.showinfo("Quiz","Non hai fatto nessuna domanda")
 
-        for i in [self.domanda,self.vero,self.falso,self.numero,self.destra,self.sinistra]:
-            i.destroy()
-        
-        self.quizInCorso = False
-        self.esci.config(command=self.master.destroy)
-        self.salvaHistory()
+            for i in [self.domanda,self.vero,self.falso,self.numero,self.destra,self.sinistra,self.tempoL]:
+                i.destroy()
+            
+            self.quizInCorso = False
+            self.esci.config(command=self.master.destroy)
+            self.salvaHistory()
     
     def spiegazione(self):
         if self.i == len(self.risposteSbagliate):
@@ -123,6 +136,10 @@ class Simulatore(tk.Frame):
         self.quizInCorso = True
         self.esci.config(command=self.stopQuiz)
     
+    def clear(self,e):
+        with open(nomeFileHistory,"w") as fl:
+            fl.write("")
+
     def caricaDomande(self):
         domande = []
         with open(nomeFile,"r") as fl:
@@ -135,17 +152,24 @@ class Simulatore(tk.Frame):
         self.everyDomande = domande
     
     def salvaHistory(self):
+        if len(self.risposte) == 0:
+            return
         data = datetime.now()
         with open(nomeFileHistory,"a") as fl:
             fl.write(f"Quiz in data {data}\nRisposte giuste: {len(self.risposteGiuste)} su {len(self.risposte)}\n")
-            fl.write(f"Errori: \n")
-            for i in range(len(self.risposteSbagliate)):
-                fl.write(f"{self.risposteSbagliate[i].get("domanda")} -> Hai risposto {self.traduzioneVF(self.risposte[i])} , invece era {self.traduzioneVF(self.risposteSbagliate[i].get("risposta"))}\n")
+            fl.write(f"Domande: \n")
+            for i in range(len(self.risposte)):
+                ris = self.risposte[i]
+                dom = self.domande[i].get("domanda")
+                fl.write(f"{dom} -> Hai risposto {self.traduzioneVF(ris)} {self.traduzioneEmoji(ris and self.domande[i].get("risposta"))}\n")
             fl.write("\n")
     
     def traduzioneVF(self,inp):
         return "Vero" if inp else "Falso"
 
+    def traduzioneEmoji(self,inp):
+        return "✅" if inp else "❌"
+    
     def getDomande(self,n = 30):
         nums = []
         ris = []
@@ -156,5 +180,13 @@ class Simulatore(tk.Frame):
                     ris.append(self.everyDomande[random])
                     break
             nums.append(random)
-        print(len(ris))
         self.domande = ris
+
+    def timer(self):
+        if self.tempoR >= 0 and self.quizInCorso:
+            minuti = floor(self.tempoR / 60)
+            secondi = self.tempoR - minuti * 60
+            self.tempoL.config(text=f"{minuti}:{secondi}")
+            self.tempoR -= 1
+            self.after(1000,self.timer)
+    
