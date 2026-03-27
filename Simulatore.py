@@ -18,7 +18,6 @@ colori = {
 
 totalWidth = 1000
 totalHeigth = 700
-tempo = 20*60
 belFont = ("Times",14)
 #https://coolors.co/f9dbbd-fca17d-da627d-9a348e-0d0628
 
@@ -38,41 +37,40 @@ class Simulatore(tk.Frame):
         self.creaHome()
         self.caricaDomande()
         self.quizInCorso = False
+        self.nStandard = 30
+        self.tStandard = 20*60
     
     def creaHome(self):
         self.titolo = tk.Label(self,text="Simulatore patente 2026",font=belFont,height=2,bg=colori["bgLabel"],fg=colori["fgMain"],border=10)
         self.titolo.grid(row=0,column=0,columnspan=4,padx=totalWidth/2-100,pady=20)
-        self.start = tk.Button(self,text="Inizia il quiz",command=lambda : self.startQuiz(30),width=10,height=2,bg=colori["bgPuls"],fg=colori["White"],border=0,font=belFont)
+        self.start = tk.Button(self,text="Inizia il quiz",command=lambda : self.startQuiz(self.nStandard,self.tStandard),width=10,height=2,bg=colori["bgPuls"],fg=colori["White"],border=0,font=belFont)
         self.start.grid(row=1,column=0,pady=10)
-        self.startInf = tk.Button(self,text="Mega quiz",command=lambda : self.startQuiz(len(self.everyDomande)),fg=colori["White"],width=10,border=0,height=2,bg=colori["bgPuls"],font=belFont)
+        self.startInf = tk.Button(self,text="Mega quiz",command=lambda : self.startQuiz(len(self.everyDomande),30*60),fg=colori["White"],width=10,border=0,height=2,bg=colori["bgPuls"],font=belFont)
         self.startInf.grid(row=1,column=3,pady=10)
         self.esci = tk.Button(self,text="Esci",command=self.master.destroy,fg=colori["Red"],width=10,font=belFont,border=5)
         self.esci.grid(row=6,column=0,columnspan=4)
         self.master.bind("cl",self.clear)
-        self.master.bind("Enter",self.startQuiz)
+        self.master.bind("s",lambda x:self.startQuiz(self.nStandard,self.tStandard))
         self.master.bind("<Escape>",lambda x:self.master.destroy())
 
     def creaQuiz(self):
         self.domanda = tk.Label(self,text=self.domande[self.i].get("domanda"),font=belFont,bg=colori["bgMain"])
         self.domanda.grid(row=3,column=0,pady=50,columnspan=4)
-        self.vero = tk.Button(self,text="V",command=self.veroQuiz,bg=colori["Green"],font=belFont)
+        self.vero = tk.Button(self,text="V",command=lambda : self.verifica(True),bg=colori["Green"],font=belFont)
         self.vero.grid(row=4,column=1)
-        self.falso = tk.Button(self,text="F",command=self.falsoQuiz,bg=colori["Red"],font=belFont)
+        self.falso = tk.Button(self,text="F",command=lambda : self.verifica(False),bg=colori["Red"],font=belFont)
         self.falso.grid(row=4,column=2)
-        self.numero = tk.Label(self,text=f"1/{self.numeroDomande}",font=belFont,bg=colori["bgLabel"])
+        self.numero = tk.Label(self,text=f"1/{self.numeroDomande}",font=belFont,bg=colori["bgLabel"],height=2,width=5)
         self.numero.grid(row=1,column=1)
         self.sinistra = tk.Button(self,text="<-",command=lambda: self.vaiSinistra(None),font=belFont)
         self.sinistra.grid(row=5,column=1,pady=10)
         self.destra = tk.Button(self,text="->",command=lambda: self.vaiDestra(None),font=belFont)
         self.destra.grid(row=5,column=2,pady=10)
-        self.tempoL = tk.Label(self,text="20:00",font=belFont,bg=colori["bgLabel"])
+        self.tempoL = tk.Label(self,text=f"{self.tStandard//60:02}:{00}",font=belFont,bg=colori["bgLabel"],height=2,width=5)
         self.tempoL.grid(row=1,column=2)
-        self.master.bind("v",self.veroQuiz)
-        self.master.bind("f",self.falsoQuiz)
-        self.master.bind("<Left>",self.vaiSinistra)
-        self.master.bind("<Right>",self.vaiDestra)
-        self.tempoR = tempo
-        self.after(100,self.timer)
+        self.esci.config(command=self.stopQuiz)
+
+        
 
     def vaiDestra(self,e):
         if self.i == self.numeroDomande-1:
@@ -90,12 +88,6 @@ class Simulatore(tk.Frame):
         self.domanda.config(text=self.domande[self.i].get("domanda"))
         self.numero.config(text=f"{self.i+1}/{self.numeroDomande}")
 
-    def falsoQuiz(self,e):
-        self.verifica(False)
-
-    def veroQuiz(self,e):
-        self.verifica(True)
-    
     def verifica(self,ris):     #Verifica la risposta
         self.risposte.update({self.i:ris})
         self.vaiDestra(None)
@@ -122,7 +114,8 @@ class Simulatore(tk.Frame):
                 i.destroy()
             
             self.quizInCorso = False
-            self.esci.config(command=self.master.destroy)
+            self.esci.config(command=self.master.destroy)        
+            self.master.bind("<Escape>",lambda x: self.master.destroy())
             self.salvaHistory()
     
     def spiegazione(self):  #Spiega le risposte sbagliate
@@ -132,7 +125,7 @@ class Simulatore(tk.Frame):
         self.i+=1
         self.spiegazione()
 
-    def startQuiz(self,k):        #
+    def startQuiz(self,k,tem):        
         if self.quizInCorso:
             return
         self.numeroDomande = k
@@ -143,7 +136,14 @@ class Simulatore(tk.Frame):
         self.risposte = {}
         self.creaQuiz()
         self.quizInCorso = True
-        self.esci.config(command=self.stopQuiz)
+        self.master.bind("<Escape>",lambda x: self.stopQuiz())
+        self.master.bind("v",lambda x: self.verifica(True))
+        self.master.bind("f",lambda x: self.verifica(False))
+        self.master.bind("<Left>",self.vaiSinistra)
+        self.master.bind("<Right>",self.vaiDestra)
+        self.tempoR = tem
+        self.after(100,self.timer)
+        
     
     def clear(self,e):  #Pulisce il file di history
         with open(nomeFileHistory,"w") as fl:
