@@ -1,0 +1,2 @@
+nStandard 30
+tStandard 1200
