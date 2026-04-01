@@ -4,8 +4,8 @@ from tkinter import messagebox as mess
 from datetime import *
 
 nomeFile = "domande.txt"
-nomeFileHistory = "history.txt"
-nomeFileImpostazioni = "imps.txt"
+nomeFileImpostazioni = "opzioni.txt"
+
 colori = {
     "null":"#f9dbbd",
     "bgLabel":"#fca17d",
@@ -14,7 +14,8 @@ colori = {
     "fgMain":"#0d0628",
     "Red": "#FF0000",
     "White":"#FFFFFF",
-    "Green":"#00FF00"
+    "Green":"#00FF00",
+    "Yellow":"#EEED30"
 }
 
 totalWidth = 1200
@@ -34,7 +35,7 @@ class Simulatore(tk.Frame):
         self.master.geometry(f"{totalWidth}x{totalHeigth}")
         self.master.title("Simulatore patente")
         self.master.config(bg=colori["bgMain"])
-        self.master.resizable(1,1)
+        self.master.resizable(0,0)
         self.grid()
         self.creaHome()
         self.caricaDomande()
@@ -52,7 +53,7 @@ class Simulatore(tk.Frame):
         if impo:
             try:
                 varn = int(self.numVar.get())
-                if varn > 0 and varn < len(self.everyDomande):
+                if varn > 0 and varn <= len(self.everyDomande):
                     self.impostazioni["nStandard"] = varn
                 else:
                     mess.showerror("Errore di input",f"Il numero deve stare tra 1 e {len(self.everyDomande)}")
@@ -71,11 +72,24 @@ class Simulatore(tk.Frame):
                     return
             except Exception as e:
                 mess.showerror("Errore di input",f"Errore di input per il tempo")
+                return
+            
+            try:
+                filen = self.fileVar.get()
+                filenll = len(filen)
+                if len(filen.split(" ")) == 1 and filen[filenll-4:filenll] == ".txt":
+                    self.impostazioni["nomeFileHistory"] = filen
+                else:
+                    mess.showerror("Errore di input",f"Il file non deve avere spazi e deve avere l'estensione .txt")
+                    return
+            except Exception as e:
+                mess.showerror("Errore di input",f"Errore di input per il tempo")
                 return  
             
-            mess.showinfo("Info","Tutto salvato correttamente")
-            for i in [self.numL,self.numEntry,self.temL,self.temEntry,self.salvaEdEsci]:
+            mess.showinfo("Impostazioni","Tutto salvato correttamente")
+            for i in [self.numL,self.numEntry,self.temL,self.temEntry,self.fileL,self.fileEntry,self.salvaEdEsci]:
                 i.destroy()
+            
         self.start = tk.Button(self,text="Inizia il quiz",command=lambda : self.startQuiz(self.impostazioni["nStandard"],self.impostazioni["tStandard"]),width=10,height=2,bg=colori["bgPuls"],fg=colori["White"],border=0,font=belFont)
         self.start.grid(row=1,column=0,pady=10)
         self.startInf = tk.Button(self,text="Mega quiz",command=lambda : self.startQuiz(len(self.everyDomande),30*60),fg=colori["White"],width=10,border=0,height=2,bg=colori["bgPuls"],font=belFont)
@@ -93,9 +107,9 @@ class Simulatore(tk.Frame):
     def creaQuiz(self):
         self.domanda = tk.Label(self,text=self.domande[self.i].get("domanda"),font=belFont,bg=colori["bgMain"])
         self.domanda.grid(row=3,column=0,pady=50,columnspan=4)
-        self.vero = tk.Button(self,text="V",command=lambda : self.verifica(True),bg=colori["Green"],font=belFont)
+        self.vero = tk.Button(self,text="V",command=lambda : self.verifica(True),bg=colori["Green"],font=belFont,height=3,width=5)
         self.vero.grid(row=4,column=1)
-        self.falso = tk.Button(self,text="F",command=lambda : self.verifica(False),bg=colori["Red"],font=belFont)
+        self.falso = tk.Button(self,text="F",command=lambda : self.verifica(False),bg=colori["Red"],font=belFont,height=3,width=5)
         self.falso.grid(row=4,column=2)
         self.numero = tk.Label(self,text=f"1/{self.numeroDomande}",font=belFont,bg=colori["bgLabel"],height=2,width=5)
         self.numero.grid(row=1,column=1)
@@ -105,14 +119,14 @@ class Simulatore(tk.Frame):
         self.destra.grid(row=5,column=2,pady=10)
         self.tempoL = tk.Label(self,text=f"{self.impostazioni["tStandard"]//60:02}:{00}",font=belFont,bg=colori["bgLabel"],height=2,width=5)
         self.tempoL.grid(row=1,column=2)
-        self.esci.config(command=self.stopQuiz)
+        self.esci.config(command=self.stopQuiz,text="Termina")
 
     def vaiImpostazioni(self):
         if self.quizInCorso:
             return
-        lis = [self.start,self.startInf,self.esci]
-        for i in lis:
+        for i in [self.start,self.startInf,self.esci]:
             i.destroy()
+        
         self.master.bind("<Escape>",lambda x:self.tornaHome(True))
 
         self.titolo.config(command=lambda:self.tornaHome(True))
@@ -128,8 +142,14 @@ class Simulatore(tk.Frame):
         self.temEntry = tk.Entry(self,textvariable=self.temVar)
         self.temEntry.grid(row=2,column=2)
 
+        self.fileL = tk.Label(self,text="Nome file history: ")
+        self.fileL.grid(row=3,column=1)
+        self.fileVar = tk.StringVar(value=f"{self.impostazioni["nomeFileHistory"]}")
+        self.fileEntry = tk.Entry(self,textvariable=self.fileVar)
+        self.fileEntry.grid(row=3,column=2)
+
         self.salvaEdEsci = tk.Button(self,command=lambda:self.tornaHome(True),text="Salva ed esci")
-        self.salvaEdEsci.grid(row=3,column=1,columnspan=2)
+        self.salvaEdEsci.grid(row=4,column=1,columnspan=2)
 
     def vaiDestra(self,e):
         if self.i == self.numeroDomande-1:
@@ -143,9 +163,19 @@ class Simulatore(tk.Frame):
         self.i -= 1
         self.aggiornaQuiz()
 
+
     def aggiornaQuiz(self):     #Per passare alla prossima domanda
         self.domanda.config(text=self.domande[self.i].get("domanda"))
         self.numero.config(text=f"{self.i+1}/{self.numeroDomande}")
+        possibili = [self.vero,self.falso]
+        ris = self.risposte.get(self.i)
+        if ris in [True,False]:
+            possibili[0 if ris else 1].config(bg=colori["Yellow"])
+            possibili[1 if ris else 0].config(bg=colori["Red"] if ris else colori["Green"])
+        else:
+            possibili[0].config(bg=colori["Green"])
+            possibili[1].config(bg=colori["Red"])
+
 
     def verifica(self,ris):     #Verifica la risposta
         self.risposte.update({self.i:ris})
@@ -155,27 +185,28 @@ class Simulatore(tk.Frame):
         risp = True
         if len(self.risposte) != self.numeroDomande:
             risp = mess.askyesno("Fine",f"Concludere l'esame anche se non si hanno fatto tutte e {len(self.domande)} le domande?")
-        if risp:
-            for i in range(len(self.risposte)):
-                if self.domande[i].get("risposta") == self.risposte.get(i):
-                    self.risposteGiuste.append(self.domande[i])
-                else:
-                    self.risposteSbagliate.append(self.domande[i])
-            
-            if len(self.risposte) > 0:
-                mess.showinfo("Quiz",f"Quiz giusti: {len(self.risposteGiuste)}/{len(self.risposte)}")
-                self.i = 0
-                self.spiegazione()
+        if not risp:
+            return
+        for i in range(len(self.risposte)):
+            if self.domande[i].get("risposta") == self.risposte.get(i):
+                self.risposteGiuste.append(self.domande[i])
             else:
-                mess.showinfo("Quiz","Non hai fatto nessuna domanda")
-
-            for i in [self.domanda,self.vero,self.falso,self.numero,self.destra,self.sinistra,self.tempoL]:
-                i.destroy()
+                self.risposteSbagliate.append(self.domande[i])
             
-            self.quizInCorso = False
-            self.esci.config(command=self.chiudiTuttoEdEsci)        
-            self.master.bind("<Escape>",lambda x: self.chiudiTuttoEdEsci())
-            self.salvaHistory()
+        if len(self.risposte) > 0:
+            mess.showinfo("Quiz",f"Quiz giusti: {len(self.risposteGiuste)}/{len(self.risposte)}")
+            self.i = 0
+            self.spiegazione()
+        else:
+            mess.showinfo("Quiz","Non hai fatto nessuna domanda")
+
+        for i in [self.domanda,self.vero,self.falso,self.numero,self.destra,self.sinistra,self.tempoL]:
+            i.destroy()
+            
+        self.quizInCorso = False
+        self.esci.config(command=self.chiudiTuttoEdEsci,text="Esci")        
+        self.master.bind("<Escape>",lambda x: self.chiudiTuttoEdEsci())
+        self.salvaHistory()
     
     def spiegazione(self):  #Spiega le risposte sbagliate
         if self.i == len(self.risposteSbagliate):
@@ -184,7 +215,7 @@ class Simulatore(tk.Frame):
         self.i+=1
         self.spiegazione()
 
-    def startQuiz(self,k,tem):        
+    def startQuiz(self,k,tem):
         if self.quizInCorso:
             return
         self.numeroDomande = k
@@ -204,7 +235,7 @@ class Simulatore(tk.Frame):
         self.after(1,self.timer)
         
     def clear(self,e):  #Pulisce il file di history
-        with open(nomeFileHistory,"w") as fl:
+        with open(self.impostazioni["nomeFileHistory"],"w") as fl:
             fl.write("")
 
     def caricaDomande(self):    #Carica le domande in una lista di dicts
@@ -222,7 +253,7 @@ class Simulatore(tk.Frame):
         if len(self.risposte) == 0:
             return
         data = datetime.now()
-        with open(nomeFileHistory,"a") as fl:
+        with open(self.impostazioni["nomeFileHistory"],"a") as fl:
             fl.write(f"Quiz in data {data}\nRisposte giuste: {len(self.risposteGiuste)} su {len(self.risposte)}\n")
             fl.write(f"Esito: {self.traduzionePB(len(self.risposteGiuste),len(self.domande))}\n")
             fl.write(f"Domande: \n")
@@ -268,8 +299,9 @@ class Simulatore(tk.Frame):
             cont = fl.readlines()
             for i in cont:
                 l = i.split(" ")
+                l[0] , l[1] = l[0].strip() , l[1].strip()
                 if l[0] in interi:
-                    l[1] = int(l[1].strip())
+                    l[1] = int(l[1])
                 diz.update({l[0]:l[1]})
         self.impostazioni = diz
     
