@@ -97,11 +97,13 @@ class Simulatore(tk.Frame):
         self.esci = tk.Button(self,text="Esci",command=self.chiudiTuttoEdEsci,fg=colori["Red"],width=10,font=belFont,border=5)
         self.esci.grid(row=6,column=0,columnspan=4)
         self.titolo.config(command=self.vaiImpostazioni)
-        self.master.bind("<Escape>",lambda x:self.master.destroy())
+        self.master.bind("<Escape>",lambda x:self.chiudiTuttoEdEsci())
 
         
     def chiudiTuttoEdEsci(self):
         self.salvaImpostazioni()
+        if self.impostazioni.get("clear"):
+            self.clear(None)
         self.master.destroy()
     
     def creaQuiz(self):
@@ -167,6 +169,9 @@ class Simulatore(tk.Frame):
     def aggiornaQuiz(self):     #Per passare alla prossima domanda
         self.domanda.config(text=self.domande[self.i].get("domanda"))
         self.numero.config(text=f"{self.i+1}/{self.numeroDomande}")
+        self.aggiornaColore()
+    
+    def aggiornaColore(self):
         possibili = [self.vero,self.falso]
         ris = self.risposte.get(self.i)
         if ris in [True,False]:
@@ -176,15 +181,22 @@ class Simulatore(tk.Frame):
             possibili[0].config(bg=colori["Green"])
             possibili[1].config(bg=colori["Red"])
 
-
-    def verifica(self,ris):     #Verifica la risposta
-        self.risposte.update({self.i:ris})
-        self.vaiDestra(None)
+    def verifica(self,risposta):     #Verifica la risposta, se la modifico non va a destra
+        ris = self.risposte.get(self.i) not in [True,False]
+        self.risposte.update({self.i:risposta})
+        if ris:
+            self.vaiDestra(None)
+        else:
+            self.aggiornaColore()
+        
     
     def stopQuiz(self):     # Ferma l'esame facendo la correzione,salvataggio e ritorno alla home page
         risp = True
         if len(self.risposte) != self.numeroDomande:
             risp = mess.askyesno("Fine",f"Concludere l'esame anche se non si hanno fatto tutte e {len(self.domande)} le domande?")
+        else:
+            risp = mess.askyesno("Fine","Concludere l'esame?")
+        
         if not risp:
             return
         for i in range(len(self.risposte)):
@@ -194,9 +206,12 @@ class Simulatore(tk.Frame):
                 self.risposteSbagliate.append(self.domande[i])
             
         if len(self.risposte) > 0:
-            mess.showinfo("Quiz",f"Quiz giusti: {len(self.risposteGiuste)}/{len(self.risposte)}")
-            self.i = 0
-            self.spiegazione()
+            superato = self.traduzioneSN(len(self.risposteGiuste),len(self.risposte))
+            mess.showinfo("Quiz",f"Esame {superato} con {len(self.risposteSbagliate)} errori")
+            risp = mess.askyesno("Soluzioni","Guardare le soluzioni alle risposte sbagliate?")
+            if risp:
+                self.i = 0
+                self.spiegazione()
         else:
             mess.showinfo("Quiz","Non hai fatto nessuna domanda")
 
@@ -211,7 +226,7 @@ class Simulatore(tk.Frame):
     def spiegazione(self):  #Spiega le risposte sbagliate
         if self.i == len(self.risposteSbagliate):
             return
-        mess.askokcancel(f"Risposte errate",f"Domanda {self.i+1} / {len(self.risposteSbagliate)}\n{self.risposteSbagliate[self.i].get("domanda")}\n\nInvece è {self.traduzioneVF(self.risposteSbagliate[self.i].get("risposta"))}")
+        mess.showinfo(f"Risposte errate",f"Domanda {self.i+1} / {len(self.risposteSbagliate)}\n{self.risposteSbagliate[self.i].get("domanda")}\n\nHai risposto {self.traduzioneVF(not self.risposteSbagliate[self.i].get("risposta"))} invece è {self.traduzioneVF(self.risposteSbagliate[self.i].get("risposta"))}")
         self.i+=1
         self.spiegazione()
 
@@ -272,6 +287,9 @@ class Simulatore(tk.Frame):
     def traduzionePB(self,giuste,totali):
         return "Promosso" if giuste > totali - (totali//10) else "Bocciato"
     
+    def traduzioneSN(self,giuste,totali):
+        return "superato" if giuste > totali - (totali//10) else "non superato"
+
     def getDomande(self,n = 30):
         nums = []
         ris = []
@@ -295,6 +313,7 @@ class Simulatore(tk.Frame):
     def caricaImpostazioni(self):
         diz = {}
         interi = ["tStandard","nStandard"]
+        booleani = ["clear"]
         with open(nomeFileImpostazioni,"r") as fl:
             cont = fl.readlines()
             for i in cont:
@@ -302,6 +321,8 @@ class Simulatore(tk.Frame):
                 l[0] , l[1] = l[0].strip() , l[1].strip()
                 if l[0] in interi:
                     l[1] = int(l[1])
+                elif l[0] in booleani:
+                    l[1] = l[1] == "True"
                 diz.update({l[0]:l[1]})
         self.impostazioni = diz
     
