@@ -51,55 +51,86 @@ class Simulatore(tk.Frame):
 
     def tornaHome(self,impo):
         if impo:
-            try:
-                varn = int(self.numVar.get())
-                if varn > 0 and varn <= len(self.everyDomande):
-                    self.impostazioni["nStandard"] = varn
-                else:
-                    mess.showerror("Errore di input",f"Il numero deve stare tra 1 e {len(self.everyDomande)}")
+            lista = [[self.numVar,"nStandard"],[self.temVar,"tStandard"],[self.megaVar,"nMega"],[self.megaTVar,"tMega"],[self.fileVar,"nomeFileHistory"]]
+            for i in lista:
+                if not self.check(i[0],i[1]):
+                    mess.showinfo("Info","Seguire le indicazioni per salvare le impostazioni")
                     return
-            except Exception as e:
-                mess.showerror("Errore di input",f"Errore di input per il numero di domande")
-                return
-
-            try:
-                temn = self.temVar.get()
-                m , s = temn.split(":")
-                if int(m) >= 1 and int(m) <=30 and int(s) >= 0 and int(s) < 60:
-                    self.impostazioni["tStandard"] = int(m)*60 + int(s)
-                else:
-                    mess.showerror("Errore di input",f"Il tempo deve stare tra 1:00 e 30:59")
-                    return
-            except Exception as e:
-                mess.showerror("Errore di input",f"Errore di input per il tempo")
-                return
-            
-            try:
-                filen = self.fileVar.get()
-                filenll = len(filen)
-                if len(filen.split(" ")) == 1 and filen[filenll-4:filenll] == ".txt":
-                    self.impostazioni["nomeFileHistory"] = filen
-                else:
-                    mess.showerror("Errore di input",f"Il file non deve avere spazi e deve avere l'estensione .txt")
-                    return
-            except Exception as e:
-                mess.showerror("Errore di input",f"Errore di input per il tempo")
-                return  
             
             mess.showinfo("Impostazioni","Tutto salvato correttamente")
-            for i in [self.numL,self.numEntry,self.temL,self.temEntry,self.fileL,self.fileEntry,self.salvaEdEsci]:
+            for i in [self.numL,self.numEntry,self.temL,self.temEntry,self.megaL,self.megaEntry,self.megaTEntry,self.megaTL,self.fileL,self.fileEntry,self.salvaEdEsci]:
                 i.destroy()
             
-        self.start = tk.Button(self,text="Inizia il quiz",command=lambda : self.startQuiz(self.impostazioni["nStandard"],self.impostazioni["tStandard"]),width=10,height=2,bg=colori["bgPuls"],fg=colori["White"],border=0,font=belFont)
+        self.start = tk.Button(self,text="Inizia l'esame",command=lambda : self.startQuiz(self.impostazioni["nStandard"],self.impostazioni["tStandard"]),width=14,height=2,bg=colori["bgPuls"],fg=colori["White"],border=0,font=belFont)
         self.start.grid(row=1,column=0,pady=10)
-        self.startInf = tk.Button(self,text="Mega quiz",command=lambda : self.startQuiz(len(self.everyDomande),30*60),fg=colori["White"],width=10,border=0,height=2,bg=colori["bgPuls"],font=belFont)
+        self.startInf = tk.Button(self,text="Inizia il mega quiz",command=lambda : self.startQuiz(self.impostazioni["nMega"],self.impostazioni["tMega"]),fg=colori["White"],width=14,border=0,height=2,bg=colori["bgPuls"],font=belFont)
         self.startInf.grid(row=1,column=3,pady=10)
         self.esci = tk.Button(self,text="Esci",command=self.chiudiTuttoEdEsci,fg=colori["Red"],width=10,font=belFont,border=5)
         self.esci.grid(row=6,column=0,columnspan=4)
         self.titolo.config(command=self.vaiImpostazioni)
         self.master.bind("<Escape>",lambda x:self.chiudiTuttoEdEsci())
 
-        
+    def check(self,elVar,impos):
+        try:
+            var = elVar.get()
+            val = self.funzioni(var,impos)
+            print(val)
+            if type(val) != list:
+                self.impostazioni[impos] = val
+                return True
+            else:
+                mess.showerror(val[0],val[1])
+                return False
+        except Exception as e:
+            print(e)
+            return False
+    
+    def funzioni(self,elVar,impos):
+        funz =  {"tStandard":self.checkTS,"nStandard":self.checkNS,"tMega":self.checkTM,"nMega":self.checkNM,
+                 "nomeFileHistory":self.checkNFL,"clear":self.checkC,"history":self.checkH   }
+        return funz[impos](elVar)
+    
+    def checkNS(self,var):
+        var = int(var)
+        if var > 0 and var <= len(self.everyDomande)-10:
+            return var
+        else:
+            return ["Errore di input",f"Il numero deve stare tra 1 e {len(self.everyDomande)-10}"]
+    
+    def checkTS(self,var):
+        m , s = var.split(":")
+        if int(m) >= 1 and int(m) <=30 and int(s) >= 0 and int(s) < 60:
+            return int(m)*60 + int(s)
+        else:
+            return ["Errore di input","Il tempo deve stare tra 1:00 e 30:59"]
+
+    def checkNM(self,var):
+        var = int(var)
+        if var > 0 and var <= len(self.everyDomande):
+            return var
+        else:
+            return ["Errore di input",f"Il numero deve stare tra 1 e {len(self.everyDomande)}"]
+    
+    def checkTM(self,var):
+        m , s = var.split(":")
+        if int(m) >= 1 and int(m) <=59 and int(s) >= 0 and int(s) < 60:
+            return int(m)*60 + int(s)
+        else:
+            return ["Errore di input","Il tempo deve stare tra 1:00 e 59:59"]
+    
+    def checkNFL(self,var):
+        ll = len(var)
+        if len(var.split(" ")) == 1 and var[ll-4:ll] == ".txt":
+            return var
+        else:
+            return ["Errore di input","Il file non deve avere spazi e deve avere l'estensione .txt"]
+
+    def checkC(self,var):
+        return True
+    
+    def checkH(self,var):
+        return True
+    
     def chiudiTuttoEdEsci(self):
         self.salvaImpostazioni()
         if self.impostazioni.get("clear"):
@@ -132,26 +163,38 @@ class Simulatore(tk.Frame):
         self.master.bind("<Escape>",lambda x:self.tornaHome(True))
 
         self.titolo.config(command=lambda:self.tornaHome(True))
-        self.numL = tk.Label(self,text="Numero di domande: ")
+        self.numL = tk.Label(self,text="Numero di domande per esame: ")
         self.numL.grid(row=1,column=1)
         self.numVar = tk.IntVar(value=self.impostazioni["nStandard"])
         self.numEntry = tk.Entry(self,textvariable=self.numVar)
         self.numEntry.grid(row=1,column=2)
 
-        self.temL = tk.Label(self,text="Tempo disponibile: ")
+        self.temL = tk.Label(self,text="Tempo disponibile per esame: ")
         self.temL.grid(row=2,column=1)
         self.temVar = tk.StringVar(value=f"{self.impostazioni["tStandard"]//60:02}:{self.impostazioni["tStandard"]%60:02}")
         self.temEntry = tk.Entry(self,textvariable=self.temVar)
         self.temEntry.grid(row=2,column=2)
 
+        self.megaL = tk.Label(self,text="Numero di domande per mega quiz: ")
+        self.megaL.grid(row=3,column=1)
+        self.megaVar = tk.IntVar(value=self.impostazioni["nMega"])
+        self.megaEntry = tk.Entry(self,textvariable=self.megaVar)
+        self.megaEntry.grid(row=3,column=2)
+
+        self.megaTL = tk.Label(self,text="Tempo disponibile per mega quiz: ")
+        self.megaTL.grid(row=4,column=1)
+        self.megaTVar = tk.StringVar(value=f"{self.impostazioni["tMega"]//60:02}:{self.impostazioni["tMega"]%60:02}")
+        self.megaTEntry = tk.Entry(self,textvariable=self.megaTVar)
+        self.megaTEntry.grid(row=4,column=2)
+
         self.fileL = tk.Label(self,text="Nome file history: ")
-        self.fileL.grid(row=3,column=1)
+        self.fileL.grid(row=5,column=1)
         self.fileVar = tk.StringVar(value=f"{self.impostazioni["nomeFileHistory"]}")
         self.fileEntry = tk.Entry(self,textvariable=self.fileVar)
-        self.fileEntry.grid(row=3,column=2)
+        self.fileEntry.grid(row=5,column=2)
 
         self.salvaEdEsci = tk.Button(self,command=lambda:self.tornaHome(True),text="Salva ed esci")
-        self.salvaEdEsci.grid(row=4,column=1,columnspan=2)
+        self.salvaEdEsci.grid(row=6,column=1,columnspan=2)
 
     def vaiDestra(self,e):
         if self.i == self.numeroDomande-1:
@@ -164,7 +207,6 @@ class Simulatore(tk.Frame):
             return
         self.i -= 1
         self.aggiornaQuiz()
-
 
     def aggiornaQuiz(self):     #Per passare alla prossima domanda
         self.domanda.config(text=self.domande[self.i].get("domanda"))
@@ -221,7 +263,8 @@ class Simulatore(tk.Frame):
         self.quizInCorso = False
         self.esci.config(command=self.chiudiTuttoEdEsci,text="Esci")        
         self.master.bind("<Escape>",lambda x: self.chiudiTuttoEdEsci())
-        self.salvaHistory()
+        if self.impostazioni["history"]:
+            self.salvaHistory()
     
     def spiegazione(self):  #Spiega le risposte sbagliate
         if self.i == len(self.risposteSbagliate):
@@ -260,7 +303,7 @@ class Simulatore(tk.Frame):
             for i in co:
                 cont = i.split(":")
                 dom = cont[0].strip()
-                ris = cont[1].strip() == "True"
+                ris = self.controlla(cont[1].strip())
                 domande.append({"domanda":dom,"risposta":ris})
         self.everyDomande = domande
     
@@ -290,6 +333,9 @@ class Simulatore(tk.Frame):
     def traduzioneSN(self,giuste,totali):
         return "superato" if giuste > totali - (totali//10) else "non superato"
 
+    def controlla(self,inp):
+        return True if inp == "True" else False
+    
     def getDomande(self,n = 30):
         nums = []
         ris = []
@@ -312,8 +358,8 @@ class Simulatore(tk.Frame):
     
     def caricaImpostazioni(self):
         diz = {}
-        interi = ["tStandard","nStandard"]
-        booleani = ["clear"]
+        interi = ["tStandard","nStandard","tMega","nMega"]
+        booleani = ["clear","history"]
         with open(nomeFileImpostazioni,"r") as fl:
             cont = fl.readlines()
             for i in cont:
@@ -322,7 +368,7 @@ class Simulatore(tk.Frame):
                 if l[0] in interi:
                     l[1] = int(l[1])
                 elif l[0] in booleani:
-                    l[1] = l[1] == "True"
+                    l[1] = self.controlla(l[1])
                 diz.update({l[0]:l[1]})
         self.impostazioni = diz
     
@@ -330,4 +376,3 @@ class Simulatore(tk.Frame):
         with open(nomeFileImpostazioni,"w") as fl:
             for i in self.impostazioni:
                 fl.write(f"{i} {self.impostazioni[i]}\n")
-        
