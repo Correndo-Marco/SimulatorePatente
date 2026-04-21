@@ -3,5 +3,5 @@ tStandard 1200
 nMega 50
 tMega 2700
 nomeFileHistory history.txt
-clear False
+clear True
 history False
