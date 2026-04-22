@@ -378,17 +378,20 @@ class Simulatore(tk.Frame):
         diz = {}
         interi = ["tStandard","nStandard","tMega","nMega"]
         booleani = ["clear","history"]
-        with open(nomeFileImpostazioni,"r") as fl:
-            cont = fl.readlines()
-            for i in cont:
-                l = i.split(" ")
-                l[0] , l[1] = l[0].strip() , l[1].strip()
-                if l[0] in interi:
-                    l[1] = int(l[1])
-                elif l[0] in booleani:
-                    l[1] = self.controlla(l[1])
-                diz.update({l[0]:l[1]})
-        self.impostazioni = diz
+        try:
+            with open(nomeFileImpostazioni,"r") as fl:
+                cont = fl.readlines()
+                for i in cont:
+                    l = i.split(" ")
+                    l[0] , l[1] = l[0].strip() , l[1].strip()
+                    if l[0] in interi:
+                        l[1] = int(l[1])
+                    elif l[0] in booleani:
+                        l[1] = self.controlla(l[1])
+                    diz.update({l[0]:l[1]})
+            self.impostazioni = diz
+        except Exception as e:
+            mess.showerror("Errore",f"Err: {e}")
     
     def salvaImpostazioni(self):
         with open(nomeFileImpostazioni,"w") as fl:

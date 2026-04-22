@@ -4,4 +4,4 @@ nMega 50
 tMega 2700
 nomeFileHistory history.txt
 clear True
-history False
+history True
